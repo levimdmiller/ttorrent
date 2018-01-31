@@ -113,13 +113,22 @@ public class Client extends Observable implements Runnable,
 
 	private Random random;
 
+	/**                                                                                                                                                                                                
+	 * Initialize the BitTorrent client.                                                                                                                                                              
+         *                                                                                                                                                                                                          * @param address The address to bind to.                                                                                                                                                                   * @param torrent The torrent to download and share.                                                                                                                                                        */
+	public Client(InetAddress address, SharedTorrent torrent)
+		throws UnknownHostException, IOException {
+		this(address, address, torrent);
+	}
+    
 	/**
 	 * Initialize the BitTorrent client.
 	 *
-	 * @param address The address to bind to.
+	 * @param bindAddress The address to bind to.
+	 * @param announceAddress The address announced to the tracker/peers
 	 * @param torrent The torrent to download and share.
 	 */
-	public Client(InetAddress address, SharedTorrent torrent)
+	public Client(InetAddress bindAddress, InetAddress announceAddress,SharedTorrent torrent)
 		throws UnknownHostException, IOException {
 		this.torrent = torrent;
 		this.state = ClientState.WAITING;
@@ -129,12 +138,11 @@ public class Client extends Observable implements Runnable,
 
 		// Initialize the incoming connection handler and register ourselves to
 		// it.
-		this.service = new ConnectionHandler(this.torrent, id, address);
+		this.service = new ConnectionHandler(this.torrent, id, bindAddress);
 		this.service.register(this);
 
 		this.self = new Peer(
-			this.service.getSocketAddress()
-				.getAddress().getHostAddress(),
+			announceAddress.getHostAddress(),
 			this.service.getSocketAddress().getPort(),
 			ByteBuffer.wrap(id.getBytes(Torrent.BYTE_ENCODING)));
 
